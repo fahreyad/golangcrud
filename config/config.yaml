@@ -1,0 +1,4 @@
+env: "local"
+storage_path: "source/source.db"
+http_server:
+  address: "localhost:8080"
