@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/fahreyad/golangcrud/internal/config"
+	"github.com/fahreyad/golangcrud/internal/http/handlers/student"
 )
 
 func main() {
@@ -21,9 +22,7 @@ func main() {
 	//database setup
 	//set up router
 	router := http.NewServeMux()
-	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to golang crud abcddd"))
-	})
+	router.HandleFunc("POST /api/students", student.New())
 	//set up server
 	server := http.Server{
 		Addr:    cfg.HTTPServer.Address,
