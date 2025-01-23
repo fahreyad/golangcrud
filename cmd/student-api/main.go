@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -13,16 +12,22 @@ import (
 
 	"github.com/fahreyad/golangcrud/internal/config"
 	"github.com/fahreyad/golangcrud/internal/http/handlers/student"
+	"github.com/fahreyad/golangcrud/internal/storage/sqlite"
 )
 
 func main() {
-	fmt.Println("Hello, World!")
 	//load config
 	cfg := config.MustLoad()
 	//database setup
+	storage, err := sqlite.New(cfg)
+	if err != nil {
+		log.Fatal("failed to connect to database: ", err)
+	}
+	slog.Info("database connected", slog.String("storage_path", cfg.StoragePath), slog.String("env", cfg.ENV))
+
 	//set up router
 	router := http.NewServeMux()
-	router.HandleFunc("POST /api/students", student.New())
+	router.HandleFunc("POST /api/students", student.New(storage))
 	//set up server
 	server := http.Server{
 		Addr:    cfg.HTTPServer.Address,
@@ -43,7 +48,7 @@ func main() {
 	slog.Info("shutting down server...")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	err := server.Shutdown(ctx)
+	err = server.Shutdown(ctx)
 	if err != nil {
 		slog.Error("failed to shutdown server: ", slog.String("error", err.Error()))
 	}

@@ -7,12 +7,13 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/fahreyad/golangcrud/internal/storage"
 	"github.com/fahreyad/golangcrud/internal/types"
 	"github.com/fahreyad/golangcrud/internal/utils/response"
 	"github.com/go-playground/validator/v10"
 )
 
-func New() http.HandlerFunc {
+func New(storage storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("new student creating")
 		var student types.Student
@@ -29,13 +30,20 @@ func New() http.HandlerFunc {
 		}
 
 		//request validation
-		err1 := validator.New().Struct(student)
-		if err1 != nil {
-			validationErr := err1.(validator.ValidationErrors)
+		err = validator.New().Struct(student)
+		if err != nil {
+			validationErr := err.(validator.ValidationErrors)
 			response.WriteJSON(w, http.StatusBadRequest, response.ValidationErrors(validationErr))
 			return
 		}
+		//db operation
+		id, err := storage.CreateStudent(student.Name, student.Email, student.Age)
+		if err != nil {
+			response.WriteJSON(w, http.StatusInternalServerError, response.ResponseError(err))
+			return
+		}
+		slog.Info("new student created", slog.Int64("id", id))
 
-		response.WriteJSON(w, http.StatusCreated, map[string]string{"success": "ok"})
+		response.WriteJSON(w, http.StatusCreated, map[string]int64{"id": id})
 	}
 }
