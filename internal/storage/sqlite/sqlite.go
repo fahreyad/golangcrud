@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/fahreyad/golangcrud/internal/config"
+	"github.com/fahreyad/golangcrud/internal/types"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -44,4 +45,14 @@ func (s *Sqlite) CreateStudent(name string, email string, age int) (int64, error
 		return 0, err
 	}
 	return id, nil
+}
+
+func (s *Sqlite) GetStudents(id int64) (types.Student, error) {
+	var student types.Student
+	row := s.Db.QueryRow("SELECT id, name, email, age FROM students WHERE id = ?", id)
+	err := row.Scan(&student.Id, &student.Name, &student.Email, &student.Age)
+	if err != nil {
+		return student, err
+	}
+	return student, nil
 }

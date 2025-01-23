@@ -3,9 +3,11 @@ package student
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/fahreyad/golangcrud/internal/storage"
 	"github.com/fahreyad/golangcrud/internal/types"
@@ -45,5 +47,28 @@ func New(storage storage.Storage) http.HandlerFunc {
 		slog.Info("new student created", slog.Int64("id", id))
 
 		response.WriteJSON(w, http.StatusCreated, map[string]int64{"id": id})
+	}
+}
+
+func List(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("student list")
+		id := r.PathValue("id")
+		fmt.Println(id)
+		if id == "" {
+			response.WriteJSON(w, http.StatusBadRequest, response.ResponseError(errors.New("id is required")))
+			return
+		}
+		intID, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			response.WriteJSON(w, http.StatusBadRequest, response.ResponseError(err))
+			return
+		}
+		studentID, err := storage.GetStudents(intID)
+		if err != nil {
+			response.WriteJSON(w, http.StatusInternalServerError, response.ResponseError(err))
+			return
+		}
+		response.WriteJSON(w, http.StatusOK, studentID)
 	}
 }
